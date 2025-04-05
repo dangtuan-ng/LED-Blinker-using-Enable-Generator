@@ -10,28 +10,31 @@ module enable_generator #(
 	input sys_rst_n,
 	output tick_enable
 );
-	// calculate counter max value
+	// Calculate counter max value (integer division)
 	localparam COUNTER_MAX_VALUE = CLK_FREQ / TARGET_FREQ;
-	// calculate counter max width
+	
+	// Calculate counter max width
 	localparam COUNTER_WIDTH = $clog2(COUNTER_MAX_VALUE);
 	
-	// declare counter register
+	// Declare counter register
 	reg [COUNTER_WIDTH-1:0] counter_reg;
 	
-	//counter logic and create tick_enable
+	// Counter logic with precise tick generation
 	always @(posedge sys_clk or negedge sys_rst_n) begin
-	
-		if(!sys_rst_n) // reset signal
+		if(!sys_rst_n) begin
+			// Reset counter and state
 			counter_reg <= 'd0;
-
-		else begin 
-			if (counter_reg === COUNTER_MAX_VALUE - 1)
-				counter_reg <= 'd0; //reset counter when reached max value
+		end
+		else begin
+			// Increment or reset counter
+			if (counter_reg == COUNTER_MAX_VALUE - 1)
+				counter_reg <= 'd0;
 			else
-				counter_reg <= counter_reg + 1'b1; // increase counter
+				counter_reg <= counter_reg + 1'b1;
 		end
 	end
 	
+	// Generate tick enable signal at exactly the right moment
 	assign tick_enable = (counter_reg == COUNTER_MAX_VALUE - 1);
 	
 endmodule
